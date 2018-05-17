@@ -4,13 +4,18 @@ import org.apache.spark.sql.SparkSession
 
 object StayStatistic {
   def main(args: Array[String]): Unit = {
+    if (args.length != 2) {
+      System.err.println("Arguments Error:")
+      System.err.println("[SPARK_MASTER] [CSV_FILE_PATH] must be specified.")
+      System.exit(1)
+    }
     val spark = SparkSession
       .builder()
       .master(args(0))
       .appName("Stay-Statistic")
       .getOrCreate()
 
-    val rawdata = spark.read.load(args(1)).map(r=>{r.getString(0).split(",")}).toDF("user","location","starttime","duration")
+    val rawdata = spark.read.format("csv").load(args(1)).toDF("user","location","starttime","duration")
 
     val frame1 = rawdata.groupBy("user","location").min("starttime").toDF("user","location","starttime")
     val frame2 = rawdata.groupBy("user","location").sum("duration").toDF("user","location","totaltime")
